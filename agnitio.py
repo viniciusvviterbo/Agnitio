@@ -14,6 +14,8 @@ class Aplicacao(Frame):
         self.imagemOriginal = None
         #Instancia da área da imagem
         self.canvas = None
+        #Define a area selecionada
+        self.areaSelecionada = None
         # Define as dimenções da janela
         tela_largura, tela_altura = self.getResolucaoTela()
         janela_largura = round(tela_largura/2)
@@ -46,7 +48,7 @@ class Aplicacao(Frame):
         imagem_largura, imagem_altura = self.imagemOriginal.size
         janela_largura, janela_altura = self.getResolucaoJanela()
 
-        if(abs(imagem_largura - janela_largura) < abs(imagem_altura - janela_altura)):
+        if(imagem_largura > imagem_altura):
             imagem_altura = imagem_altura * (janela_largura / imagem_largura)
             imagem_largura = janela_largura
         else:
@@ -64,11 +66,15 @@ class Aplicacao(Frame):
         self.canvas = canvas
 
     def mouseBotaoEsquerdoPressionado(self, event):
-        self.canvas.create_rectangle(event.x-64, event.y-64, event.x+64, event.y+64, outline="red")
+        if(self.areaSelecionada != None):
+            self.canvas.delete(self.areaSelecionada)
+        self.areaSelecionada = self.canvas.create_rectangle(event.x-64, event.y-64, event.x+64, event.y+64, outline="red")
         newImg = self.imagemOriginal.resize((self.canvas.winfo_width(), self.canvas.winfo_height()), Image.ANTIALIAS)
         newImg.crop((event.x-64, event.y-64, event.x+64, event.y+64)).save('teste.png')
 
     def crop_img(self):
+        if(self.areaSelecionada):
+            self.canvas.delete(self.areaSelecionada)
         self.canvas.bind('<Button-1>', self.mouseBotaoEsquerdoPressionado)
 
     def criarMenu(self):
