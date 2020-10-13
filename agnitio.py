@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import filedialog
+from tkinter import messagebox
 from PIL import ImageTk, Image
 import os
 
@@ -11,6 +12,8 @@ class Aplicacao(Frame):
         self.master.title(titulo)
         # Instancia a imagem da class como None
         self.imagemOriginal = None
+        #Instancia da área da imagem
+        self.canvas = None
         # Define as dimenções da janela
         tela_largura, tela_altura = self.getResolucaoTela()
         janela_largura = round(tela_largura/2)
@@ -32,6 +35,9 @@ class Aplicacao(Frame):
         return (janela_largura, janela_altura)
 
     def open_img(self):
+        if(self.canvas!=None): 
+            self.canvas.destroy()
+
         # Abre caixa de diálogo para seleção do arquivo
         fname = filedialog.askopenfilename(title='open')
         # Instancia a imagem selecionada
@@ -51,9 +57,19 @@ class Aplicacao(Frame):
 
         # Inclui a imagem redimensionada na tela
         img = ImageTk.PhotoImage(img)
-        panel = Label(self.master, image=img)
-        panel.image = img
-        panel.pack()
+        canvas = Canvas(self.master, height=round(imagem_altura), width=round(imagem_largura))
+        canvas.create_image(round(imagem_largura/2), round(imagem_altura/2), image=img)
+        canvas.pack()
+        canvas.image = img
+        self.canvas = canvas
+
+    def mouseBotaoEsquerdoPressionado(self, event):
+        self.canvas.create_rectangle(event.x-64, event.y-64, event.x+64, event.y+64, outline="red")
+        newImg = self.imagemOriginal.resize((self.canvas.winfo_width(), self.canvas.winfo_height()), Image.ANTIALIAS)
+        newImg.crop((event.x-64, event.y-64, event.x+64, event.y+64)).save('teste.png')
+
+    def crop_img(self):
+        self.canvas.bind('<Button-1>', self.mouseBotaoEsquerdoPressionado)
 
     def criarMenu(self):
         menubar = Menu(self.master)
@@ -63,6 +79,9 @@ class Aplicacao(Frame):
         opcaoMenu.add_command(label="Sair", command=self.master.quit)
 
         menubar.add_cascade(label="Arquivo", menu=opcaoMenu)
+
+        menubar.add_command(label="Recortar", command=self.crop_img)
+
         self.master.config(menu=menubar)
 
 
