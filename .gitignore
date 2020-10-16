@@ -1,3 +1,6 @@
+# Arquivos específicos da aplicação
+imagens_treinamento/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
