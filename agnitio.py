@@ -1,9 +1,14 @@
 from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
+from skimage.feature import greycomatrix, greycoprops
+from skimage.measure import moments_hu, shannon_entropy
+import cv2
+import numpy as np
 from PIL import ImageTk, Image
 from pathlib import Path
 import os
+import random
 
 class AutoScrollbar(Scrollbar):
     def set(self, lo, hi):
@@ -28,15 +33,24 @@ class Aplicacao(Frame):
         ### ATRIBUTOS ###
         self.master.title(titulo) # Título da imagem
         self.imagem = None # Instancia da imagem original
+        self.janela_largura, self.janela_altura = self.getResolucaoTela() # Define as dimensões da janela
+        
+        self.canvas = None # Instancia da área de manipulação da imagem
+        self.textoAncora = None # Define o texto que será usado como referência de instanciação da imagem
+        self.imagemModificada = None # Instância do objeto manipulável que representa a imagem original
         self.coordImagem = None # Instancia das coordenadas da imagem
         self.coordClickOrigem = None
         self.coordClickDestino = None
-        self.imagemObjeto = None # Instância do objeto manipulável que representa a imagem original
-        self.janela_largura, self.janela_altura = self.getResolucaoTela() # Define as dimensões da janela
-        self.canvas = None # Instancia da área de manipulação da imagem
-        self.areaSelecionada = None # Define a area selecionada (quadrado vermelho)
-        self.textoAncora = None # Define o texto que será usado como referência de instanciação da imagem
+        self.areaSelecionada = None # Define a area selecionada (quadrado verde)
         
+        self.imagensTreinamento = None # Define o vetor que armazenará as imagens que serão utilizadas para treinamento
+
+        self.opcaoEntropia = BooleanVar(value=False) # Define o valor das opções selecionadas na janela de seleção de características
+        self.opcaoHomogeniedade = BooleanVar(value=False) # Define o valor das opções selecionadas na janela de seleção de características
+        self.opcaoEnergia = BooleanVar(value=False) # Define o valor das opções selecionadas na janela de seleção de características
+        self.opcaoContraste = BooleanVar(value=False) # Define o valor das opções selecionadas na janela de seleção de características
+        self.opcaoHu =  BooleanVar(value=False) # Define o valor das opções selecionadas na janela de seleção de características
+
         # Aplica as dimensões e posição da janela
         self.master.geometry(str(self.janela_largura) + 'x' + str(self.janela_altura) + '+0+0')
         # Implementa o menu e seus componentes na janela
@@ -51,7 +65,7 @@ class Aplicacao(Frame):
     # Abre uma imagem na tela
     def abrirImagem(self):
         # Abre caixa de diálogo para seleção do arquivo
-        fname = filedialog.askopenfilename(title='open')
+        fname = filedialog.askopenfilename(title='Selecione imagem para manipulação')
         # Garante que um arquivo foi escolhido
         if type(fname) is str and fname != '':
             # Implementa barras de rolagem vertical e horizontal para o canvas
@@ -94,23 +108,60 @@ class Aplicacao(Frame):
         else:
             return
 
-    # Abre um diretório e lê todas as imagens em seus subdiretórios
+    # Abre um diretório enewImg lê todas as imagens em seus subdiretórios
     def lerDiretorio(self):
         # Lê o caminho do diretório escolhido pelo usuário
-        caminhoDir = filedialog.askdirectory(title='open')
+        caminhoDir = filedialog.askdirectory(title='Selecione o diretório de treinamento')
         # Garante que um diretório foi escolhido
         if type(caminhoDir) is str and caminhoDir != '':
-            # Declara a lista de imagens que serão utilizadas para treinamento
-            imagensTreinamento = []
+            # Declara a lista de imagens (e dados relacionado) que serão utilizadas para treinamento
+            # Cada tupla nesse array será composto como (CAMINHO_DA_IMG, NOME_IMG, PASTA_ORIGEM_IMG)
+            self.imagensTreinamento = [[],[],[],[]]
+
             # Loop para cada item encontrado no caminho selecionado
             for item in os.listdir(caminhoDir):
                 # Caso o item da iteração NÃO seja um arquivo (ou seja, um subdiretório), executa
                 if os.path.isfile(os.path.join(caminhoDir, item)) is False:
                     # Adiciona o nome dos arquivos do subdiretório à lista
                     for img in os.listdir(os.path.join(caminhoDir, item)):
-                        imagensTreinamento.append(img)
+                        caminhoImagem = os.path.join(caminhoDir, item) + '/' + img
+                        tmp = (caminhoImagem, cv2.imread(caminhoImagem, 0))
+                        self.imagensTreinamento[int(item) - 1].append(tmp)
+                        
+            # Inicializa o treina do classificador de imagens
+            self.treinarClassificador()
+
         else:
             return
+
+    # Reliza o treino do classificador de imagens
+    def treinarClassificador(self):
+        for pasta in self.imagensTreinamento: # Para cada array em self.imagensTreinamento
+            random.shuffle(pasta) # Embaralha a ordem das tuplas nesse array
+            for img in pasta: # Para cada tupla nesse array
+                im = img[1] # Instancia o cv2.imread da imagem referenciada
+                data = np.array((im/8), 'int') # Divide os valores de cinza de im em 8 para que existam no máximo 32 tons de cinza
+                g = greycomatrix(data, [1, 2, 4, 8, 16], [0, np.pi/4, np.pi/2, 3*np.pi/4], levels=32, normed=True, symmetric=True) # Calcula a matrix de co-ocorrência do nível de cinza da imagem.
+                
+                constraste = None
+                homogeniedade = None
+                energia = None
+                entropia = None
+                hu = None
+
+                if self.opcaoContraste:    
+                    contraste = greycoprops(g, 'contrast') # Calcula o contraste da matrix de co-ocorrência de níveis de cinza
+                if self.opcaoHomogeniedade:
+                    homogeniedade = greycoprops(g, 'homogeneity') # Calcula a homogeniedade da matrix de co-ocorrência de níveis de cinza
+                if self.opcaoEnergia:
+                    energia = greycoprops(g, 'energy') # Calcula a energia da matrix de co-ocorrência de níveis de cinza
+                if self.opcaoEntropia:
+                    entropia = shannon_entropy(data) # Calcula a entropia de Shannon da imagem
+                if self.opcaoHu:
+                    hu = moments_hu(data) # Calcula os movimentos de Hu da imagem
+
+                
+                
 
     # Contorna e recorta a área de interesse selecionada
     def selecionarAreaInteresse(self, event):
@@ -124,10 +175,10 @@ class Aplicacao(Frame):
         coordAncora = self.canvas.bbox(self.textoAncora) # coisa do lucca
 
         self.areaSelecionada = self.canvas.create_rectangle(
-            event.x-64 + coordCanvas[0],
-            event.y-64 + coordCanvas[1],
-            event.x+64 + coordCanvas[0], 
-            event.y+64 + coordCanvas[1],            
+            event.x - (64 * self.imagemEscala) + coordCanvas[0],
+            event.y - (64 * self.imagemEscala) + coordCanvas[1],
+            event.x + (64 * self.imagemEscala) + coordCanvas[0], 
+            event.y + (64 * self.imagemEscala) + coordCanvas[1],            
             outline="green")
 
         newImg = self.imagemModificada
@@ -144,14 +195,6 @@ class Aplicacao(Frame):
             self.canvas.delete(self.areaSelecionada)
         self.canvas.bind('<Button-3>', self.selecionarAreaInteresse) # Selecionar região de interesse 128x128
 
-    # Reliza o treino do classificador de imagens
-    def treinarClassificador(self):
-        print('Opção para treinar o classificador selecionada')
-
-    # Escolhe as características da imagem ou da região de interesse a serem usadas
-    def selecionarCaracteristicas(self):
-        print('Opção para selecionar as características da imagem selecionada')
-    
     # Calcula as características da imagem ou da região de interesse selecionada
     def calcularCaracteristicas(self):
         print('Opção para calcular as características da imagem selecionada')
@@ -202,8 +245,6 @@ class Aplicacao(Frame):
         
         self.coordImagem = (novoX, novoY)
 
-        print(self.coordImagem)
-
         self.coordClickOrigem = self.coordClickDestino
 
     # Realiza o zoom na imagem com a roda do mouse
@@ -240,22 +281,40 @@ class Aplicacao(Frame):
     def criarMenu(self):
         menubar = Menu(self.master)
         
+        opcoesClassificacao = Menu(menubar, tearoff=0)
+        opcoesClassificacao.add_command(label="Importar imagem", command=self.abrirImagem)
+        opcoesClassificacao.add_command(label="Selecionar região de interesse", command=self.habilitarSelecaoAreaInteresse)
+        menubar.add_cascade(label="Classificação", menu=opcoesClassificacao)
+        
+        checkCaracteristicas = Menu(menubar, tearoff=0)
+        checkCaracteristicas.add_checkbutton(label='Entropia', variable=self.opcaoEntropia, onvalue=True, offvalue=False)
+        checkCaracteristicas.add_checkbutton(label='Homogeniedade', variable=self.opcaoHomogeniedade, onvalue=True, offvalue=False)
+        checkCaracteristicas.add_checkbutton(label='Energia', variable=self.opcaoEnergia, onvalue=True, offvalue=False)
+        checkCaracteristicas.add_checkbutton(label='Contraste', variable=self.opcaoContraste, onvalue=True, offvalue=False)
+        checkCaracteristicas.add_checkbutton(label='Momentos de Hu', variable=self.opcaoHu, onvalue=True, offvalue=False)
+
+        opcoesTreinamento = Menu(menubar, tearoff=0)
+        opcoesTreinamento.add_cascade(label='Selecionar Características', menu=checkCaracteristicas)
+        opcoesTreinamento.add_command(label="Treinar classificação a partir do dataset", command=self.lerDiretorio)
+        menubar.add_cascade(label="Treinamento", menu=opcoesTreinamento)
+
+
+
+
+        '''
         opcoesArquivos = Menu(menubar, tearoff=0)
-        opcoesArquivos.add_command(label="Importar imagem", command=self.abrirImagem)
-        opcoesArquivos.add_command(label="Ler diretório de treino", command=self.lerDiretorio)
         opcoesArquivos.add_command(label="Sair", command=self.master.quit)
         menubar.add_cascade(label="Arquivos", menu=opcoesArquivos)
 
         opcoesManipulacao = Menu(menubar, tearoff=0)
-        opcoesManipulacao.add_command(label="Selecionar região de interesse", command=self.habilitarSelecaoAreaInteresse)
         opcoesManipulacao.add_command(label="Treinar classificador", command=self.treinarClassificador)
         
         opcoesManipulacaoCaracteristicas = Menu(menubar, tearoff=0)
-        opcoesManipulacaoCaracteristicas.add_command(label="Selecionar características", command=self.selecionarCaracteristicas)
         opcoesManipulacaoCaracteristicas.add_command(label="Calcular características da imagem", command=self.calcularCaracteristicas)
 
         opcoesManipulacao.add_cascade(label="Características", menu=opcoesManipulacaoCaracteristicas)
         menubar.add_cascade(label="Manipulação", menu=opcoesManipulacao)
+        '''
 
         self.master.config(menu=menubar)
 
