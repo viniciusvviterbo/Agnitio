@@ -12,8 +12,14 @@ import sys
 import random
 from timeit import default_timer as timer
 
-inicioExecucao = float()
-fimExecucao = float()
+inicioExecucaoTreino = float()
+fimExecucaoTreino = float()
+
+inicioExecucaoImagemTotal = float()
+fimExecucaoImagemTotal = float()
+
+inicioExecucaoImagemSelecionada = float()
+fimExecucaoImagemSelecionada = float()
 
 class AutoScrollbar(Scrollbar):
     def set(self, lo, hi):
@@ -124,7 +130,7 @@ class Aplicacao(Frame):
     def lerDiretorio(self):
         self.imagensTreinamento = [list(),list(),list(),list()]
 
-        inicioExecucao = timer()
+        inicioExecucaoTreino = timer()
 
         # Lê o caminho do diretório escolhido pelo usuário
         caminhoDir = filedialog.askdirectory(title='Selecione o diretório de treinamento')
@@ -310,14 +316,14 @@ class Aplicacao(Frame):
         for i in range(0, 4):
             acuracia += matrizConfusao[i][i]
 
-        fimExecucao = timer()
+        fimExecucaoTreino = timer()
 
         self.matrizConfusao = ('''\n{}\t{}\t{}\t{}\n{}\t{}\t{}\t{}\n{}\t{}\t{}\t{}\n{}\t{}\t{}\t{}\n\nAcurácia: {} %\n\nEspecificidade: {}\n\nTempo de Execução: {} s\n'''.format(
                 self.exibir2Digitos(matrizConfusao[0][0]), self.exibir2Digitos(matrizConfusao[0][1]), self.exibir2Digitos(matrizConfusao[0][2]), self.exibir2Digitos(matrizConfusao[0][3]),
                 self.exibir2Digitos(matrizConfusao[1][0]), self.exibir2Digitos(matrizConfusao[1][1]), self.exibir2Digitos(matrizConfusao[1][2]), self.exibir2Digitos(matrizConfusao[1][3]),
                 self.exibir2Digitos(matrizConfusao[2][0]), self.exibir2Digitos(matrizConfusao[2][1]), self.exibir2Digitos(matrizConfusao[2][2]), self.exibir2Digitos(matrizConfusao[2][3]),
                 self.exibir2Digitos(matrizConfusao[3][0]), self.exibir2Digitos(matrizConfusao[3][1]), self.exibir2Digitos(matrizConfusao[3][2]), self.exibir2Digitos(matrizConfusao[3][3]),
-                 "{:.2f}".format(acuracia), "{:.2f}".format((fimExecucao - inicioExecucao)/100000), "{:.2f}".format((100 - acuracia)/300))) 
+                 "{:.2f}".format(acuracia), "{:.2f}".format((fimExecucaoTreino - inicioExecucaoTreino)/100000), "{:.2f}".format((100 - acuracia)/300))) 
 
         self.exibirMatrizConfusao()
 
@@ -331,10 +337,74 @@ class Aplicacao(Frame):
         matrizConfusaoJanela.geometry("300x300+408+250")
         Label(matrizConfusaoJanela, text =self.matrizConfusao).pack() 
 
+
+    def exibirClassificacaoImagem(self, mensagem):
+        matrizClassificacaoJanela = Toplevel(self.master) 
+        matrizClassificacaoJanela.title("Classificação da Imagem")
+        matrizClassificacaoJanela.geometry("300x300+408+250")
+        Label(matrizClassificacaoJanela, text = mensagem).pack() 
+
+
     def classificarAreaInteresse(self):
-        console.log('\nSelecionada opção de classificação da região de interesse.\n')
+        inicioExecucaoImagemSelecionada = timer()
+
+        im = cv2.imread('./area_de_interesse.png', 0) # Instancia o cv2.imread da imagem selecionada
+        data = np.array((im/8), 'int') # Divide os valores de cinza de im em 8 para que existam no máximo 32 tons de cinza
+        g = greycomatrix(data, [1, 2, 4, 8, 16], [0, np.pi/4, np.pi/2, 3*np.pi/4], levels=32, normed=True, symmetric=True) # Calcula a matrix de co-ocorrência do nível de cinza da imagem.
+                
+        # Obtêm-se as características selecionadas pelo usuário
+        if self.opcaoContraste:    
+            contraste = greycoprops(g, 'contrast') # Calcula o contraste da matrix de co-ocorrência de níveis de cinza
+            contraste = [sum(i) for i in contraste]
+        if self.opcaoHomogeneidade:
+            homogeneidade = greycoprops(g, 'homogeneity') # Calcula a homogeneidade da matrix de co-ocorrência de níveis de cinza
+            homogeneidade = [sum(i) for i in homogeneidade]
+        if self.opcaoEnergia:
+            energia = greycoprops(g, 'energy') # Calcula a energia da matrix de co-ocorrência de níveis de cinza
+            energia = [sum(i) for i in energia]
+        if self.opcaoEntropia:
+            entropia = shannon_entropy(data) # Calcula a entropia de Shannon da imagem
+        if self.opcaoHu:
+            hu = moments_hu(data) # Calcula os movimentos de Hu da imagem
+            
+        #self.caracteristicasImagensTeste[self.imagensTreinamento.index(pasta)][0]
+        caracteristicasImagemSelect = np.concatenate((contraste, homogeneidade, energia, entropia, hu), axis=None)
+
+        listaDiferencialTeste1 = np.subtract(caracteristicasImagemSelect, self.media1)
+        listaDiferencialTeste2 = np.subtract(caracteristicasImagemSelect, self.media2)
+        listaDiferencialTeste3 = np.subtract(caracteristicasImagemSelect, self.media3)
+        listaDiferencialTeste4 = np.subtract(caracteristicasImagemSelect, self.media4)
+
+        dist1 = np.dot(np.dot(np.array(listaDiferencialTeste1).T, self.inversoCovariancia1), np.array(listaDiferencialTeste1))
+        dist2 = np.dot(np.dot(np.array(listaDiferencialTeste2).T, self.inversoCovariancia2), np.array(listaDiferencialTeste2))
+        dist3 = np.dot(np.dot(np.array(listaDiferencialTeste3).T, self.inversoCovariancia3), np.array(listaDiferencialTeste3))
+        dist4 = np.dot(np.dot(np.array(listaDiferencialTeste4).T, self.inversoCovariancia4), np.array(listaDiferencialTeste4))
+        
+        menorDistanciaValor = sys.maxsize
+        menorDistanciaId = None
+        if dist1 < menorDistanciaValor :
+            menorDistanciaId = 1
+            menorDistanciaValor = dist1
+        if dist2 < menorDistanciaValor :
+            menorDistanciaId = 2
+            menorDistanciaValor = dist2
+        if dist3 < menorDistanciaValor :
+            menorDistanciaId = 3
+            menorDistanciaValor = dist3
+        if dist4 < menorDistanciaValor :
+            menorDistanciaId = 4
+            menorDistanciaValor = dist4
+
+        fimExecucaoImagemSelecionada = timer()
+
+        mensagem = ('''\nClasse BIRADS: {}\n\nTempo de Execução: {} s\n'''.format(
+                menorDistanciaId, "{:.5f}".format((fimExecucaoImagemSelecionada - inicioExecucaoImagemSelecionada)/100000))) 
+
+        self.exibirClassificacaoImagem(mensagem)
 
     def classificarImagem(self):
+        inicioExecucaoImagemTotal = timer()
+
         im = cv2.imread(self.pathImagem, 0) # Instancia o cv2.imread da imagem selecionada
         data = np.array((im/8), 'int') # Divide os valores de cinza de im em 8 para que existam no máximo 32 tons de cinza
         g = greycomatrix(data, [1, 2, 4, 8, 16], [0, np.pi/4, np.pi/2, 3*np.pi/4], levels=32, normed=True, symmetric=True) # Calcula a matrix de co-ocorrência do nível de cinza da imagem.
@@ -382,9 +452,12 @@ class Aplicacao(Frame):
             menorDistanciaId = 4
             menorDistanciaValor = dist4
 
-        print('Id identificado :', menorDistanciaId,'\tCaminho imagem:', self.pathImagem)
+        fimExecucaoImagemTotal = timer()
 
+        mensagem = ('''\nClasse BIRADS: {}\n\nTempo de Execução: {} s\n'''.format(
+                menorDistanciaId, "{:.5f}".format((fimExecucaoImagemTotal - inicioExecucaoImagemTotal)/100000))) 
 
+        self.exibirClassificacaoImagem(mensagem)
 
     # Contorna e recorta a área de interesse selecionada
     def selecionarAreaInteresse(self, event):
@@ -417,10 +490,6 @@ class Aplicacao(Frame):
         if(self.areaSelecionada):
             self.canvas.delete(self.areaSelecionada)
         self.canvas.bind('<Button-3>', self.selecionarAreaInteresse) # Selecionar região de interesse 128x128
-
-    # Calcula as características da imagem ou da região de interesse selecionada
-    def calcularCaracteristicas(self):
-        print('Opção para calcular as características da imagem selecionada')
 
     # Lembra das coordenadas prévias à movimentação com o mouse
     def moverDe(self, event):

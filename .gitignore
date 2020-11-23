@@ -1,10 +1,9 @@
 # Arquivos específicos da aplicação
 imagens_treinamento/
-Imgs/
+imagens_teste/
 enunciado.pdf
-area_de_interesse*
-imagoProcessus.py
-passo-a-passo.txt
+area_de_interesse.png
+Trabalho_Pratico_PI.pdf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
