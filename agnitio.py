@@ -38,6 +38,7 @@ class Aplicacao(Frame):
         ### ATRIBUTOS ###
         self.master.title(titulo) # Título da imagem
         self.imagem = None # Instancia da imagem original
+        self.pathImagem = None
         self.janela_largura, self.janela_altura = self.getResolucaoTela() # Define as dimensões da janela
         
         self.canvas = None # Instancia da área de manipulação da imagem
@@ -52,11 +53,11 @@ class Aplicacao(Frame):
 
         self.matrizConfusao = None
 
-        self.opcaoEntropia = BooleanVar(value=False) # Define o valor das opções selecionadas na janela de seleção de características
-        self.opcaoHomogeneidade = BooleanVar(value=False) # Define o valor das opções selecionadas na janela de seleção de características
-        self.opcaoEnergia = BooleanVar(value=False) # Define o valor das opções selecionadas na janela de seleção de características
-        self.opcaoContraste = BooleanVar(value=False) # Define o valor das opções selecionadas na janela de seleção de características
-        self.opcaoHu =  BooleanVar(value=False) # Define o valor das opções selecionadas na janela de seleção de características
+        self.opcaoEntropia = BooleanVar(value=True) # Define o valor das opções selecionadas na janela de seleção de características
+        self.opcaoHomogeneidade = BooleanVar(value=True) # Define o valor das opções selecionadas na janela de seleção de características
+        self.opcaoEnergia = BooleanVar(value=True) # Define o valor das opções selecionadas na janela de seleção de características
+        self.opcaoContraste = BooleanVar(value=True) # Define o valor das opções selecionadas na janela de seleção de características
+        self.opcaoHu =  BooleanVar(value=True) # Define o valor das opções selecionadas na janela de seleção de características
 
         self.caracteristicasImagens = [list(),list(),list(),list()] # Define uma matriz onde cada linha corresponde às características de um diretório
         self.caracteristicasImagensTeste = [list(),list(),list(),list()] # Define uma matriz onde cada linha corresponde às características de um diretório
@@ -86,6 +87,7 @@ class Aplicacao(Frame):
 
             # Instancia a imagem selecionada
             self.imagem = Image.open(fname)
+            self.pathImagem = fname
             self.coordImagem = (0, 0)
 
             # Instancia o canvas
@@ -120,6 +122,7 @@ class Aplicacao(Frame):
 
     # Abre um diretório enewImg lê todas as imagens em seus subdiretórios
     def lerDiretorio(self):
+        self.imagensTreinamento = [list(),list(),list(),list()]
 
         inicioExecucao = timer()
 
@@ -147,6 +150,9 @@ class Aplicacao(Frame):
 
     # Reliza o treino do classificador de imagens
     def treinarClassificador(self):
+        self.caracteristicasImagens = [list(),list(),list(),list()]
+        self.caracteristicasImagensTeste = [list(),list(),list(),list()]
+
         # Instancia matrizes de medias, cada posição sendo uma média para cada diretório
         mediaContraste = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
         mediaHomogeneidade = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
@@ -157,6 +163,12 @@ class Aplicacao(Frame):
         listaCaracteristicasImagens = list()
         listaCaracteristicasImagensTeste = list()
 
+        contraste = [0,0,0,0,0]
+        homogeneidade = [0,0,0,0,0]
+        energia = [0,0,0,0,0]
+        entropia = [0]
+        hu = [0,0,0,0,0,0,0]
+
         for pasta in self.imagensTreinamento: # Para cada array em self.imagensTreinamento
             random.shuffle(pasta) # Embaralha a ordem das tuplas nesse array
             for img in pasta[:round(len(pasta)*0.75)]: # Para as tuplas dentre as 75% primeiras da lista, executa
@@ -165,22 +177,22 @@ class Aplicacao(Frame):
                 g = greycomatrix(data, [1, 2, 4, 8, 16], [0, np.pi/4, np.pi/2, 3*np.pi/4], levels=32, normed=True, symmetric=True) # Calcula a matrix de co-ocorrência do nível de cinza da imagem.
                 
                 # Obtêm-se as características selecionadas pelo usuário
-                if self.opcaoContraste:    
+                if self.opcaoContraste.get():    
                     contraste = greycoprops(g, 'contrast') # Calcula o contraste da matrix de co-ocorrência de níveis de cinza
                     contraste = [sum(i) for i in contraste]
                     mediaContraste[self.imagensTreinamento.index(pasta)] = np.add(mediaContraste[self.imagensTreinamento.index(pasta)], contraste)
-                if self.opcaoHomogeneidade:
+                if self.opcaoHomogeneidade.get():
                     homogeneidade = greycoprops(g, 'homogeneity') # Calcula a homogeneidade da matrix de co-ocorrência de níveis de cinza
                     homogeneidade = [sum(i) for i in homogeneidade]
                     mediaHomogeneidade[self.imagensTreinamento.index(pasta)] = np.add(mediaHomogeneidade[self.imagensTreinamento.index(pasta)], homogeneidade)
-                if self.opcaoEnergia:
+                if self.opcaoEnergia.get():
                     energia = greycoprops(g, 'energy') # Calcula a energia da matrix de co-ocorrência de níveis de cinza
                     energia = [sum(i) for i in energia]
                     mediaEnergia[self.imagensTreinamento.index(pasta)] = np.add(mediaEnergia[self.imagensTreinamento.index(pasta)], energia)
-                if self.opcaoEntropia:
+                if self.opcaoEntropia.get():
                     entropia = shannon_entropy(data) # Calcula a entropia de Shannon da imagem
                     mediaEntropia[self.imagensTreinamento.index(pasta)] = np.add(mediaEntropia[self.imagensTreinamento.index(pasta)], entropia)
-                if self.opcaoHu:
+                if self.opcaoHu.get():
                     hu = moments_hu(data) # Calcula os movimentos de Hu da imagem
                     mediaHu[self.imagensTreinamento.index(pasta)] = np.add(mediaHu[self.imagensTreinamento.index(pasta)], hu)
 
@@ -194,13 +206,13 @@ class Aplicacao(Frame):
             mediaHu[self.imagensTreinamento.index(pasta)]             /= round(len(pasta)*0.75)
 
             # Transforma as características de self.caracteristicasImagens[self.imagensTreinamento.index(pasta)] em médias centradas
-            for caracteristicaImg in self.caracteristicasImagens[self.imagensTreinamento.index(pasta)]:
+            for caracteristicaImg in self.caracteristicasImagens[self.imagensTreinamento.index(pasta)]:    
                 caracteristicaImg[0] = np.subtract(caracteristicaImg[0], mediaContraste[self.imagensTreinamento.index(pasta)])
                 caracteristicaImg[1] = np.subtract(caracteristicaImg[1], mediaHomogeneidade[self.imagensTreinamento.index(pasta)])
                 caracteristicaImg[2] = np.subtract(caracteristicaImg[2], mediaEnergia[self.imagensTreinamento.index(pasta)])
                 caracteristicaImg[3] = np.subtract(caracteristicaImg[3], mediaEntropia[self.imagensTreinamento.index(pasta)])
                 caracteristicaImg[4] = np.subtract(caracteristicaImg[4], mediaHu[self.imagensTreinamento.index(pasta)])
-
+                
                 caracteristicaImg = caracteristicaImg[5:]
 
             # Rearraja os dados obtidos em uma lista, onde cada linha é um array ordenado de todas as características
@@ -220,15 +232,15 @@ class Aplicacao(Frame):
         matrizCovariancia4 = np.cov(np.array(listaCaracteristicasImagens[3]).T)
         
         # Obtêm as matrizes inversas das de covariância dos diretórios
-        inversoCovariancia1 = np.linalg.inv(matrizCovariancia1)
-        inversoCovariancia2 = np.linalg.inv(matrizCovariancia2)
-        inversoCovariancia3 = np.linalg.inv(matrizCovariancia3)
-        inversoCovariancia4 = np.linalg.inv(matrizCovariancia4)
+        self.inversoCovariancia1 = np.linalg.inv(matrizCovariancia1)
+        self.inversoCovariancia2 = np.linalg.inv(matrizCovariancia2)
+        self.inversoCovariancia3 = np.linalg.inv(matrizCovariancia3)
+        self.inversoCovariancia4 = np.linalg.inv(matrizCovariancia4)
 
-        media1 = np.concatenate((mediaContraste[0], mediaHomogeneidade[0], mediaEnergia[0], mediaEntropia[0], mediaHu[0]), axis=None) 
-        media2 = np.concatenate((mediaContraste[1], mediaHomogeneidade[1], mediaEnergia[1], mediaEntropia[1], mediaHu[1]), axis=None) 
-        media3 = np.concatenate((mediaContraste[2], mediaHomogeneidade[2], mediaEnergia[2], mediaEntropia[2], mediaHu[2]), axis=None) 
-        media4 = np.concatenate((mediaContraste[3], mediaHomogeneidade[3], mediaEnergia[3], mediaEntropia[3], mediaHu[3]), axis=None) 
+        self.media1 = np.concatenate((mediaContraste[0], mediaHomogeneidade[0], mediaEnergia[0], mediaEntropia[0], mediaHu[0]), axis=None) 
+        self.media2 = np.concatenate((mediaContraste[1], mediaHomogeneidade[1], mediaEnergia[1], mediaEntropia[1], mediaHu[1]), axis=None) 
+        self.media3 = np.concatenate((mediaContraste[2], mediaHomogeneidade[2], mediaEnergia[2], mediaEntropia[2], mediaHu[2]), axis=None) 
+        self.media4 = np.concatenate((mediaContraste[3], mediaHomogeneidade[3], mediaEnergia[3], mediaEntropia[3], mediaHu[3]), axis=None) 
         
         # Matriz Confusão
         matrizConfusao = [[0, 0, 0, 0],[0, 0, 0, 0],[0, 0, 0, 0],[0, 0, 0, 0]]
@@ -254,7 +266,7 @@ class Aplicacao(Frame):
                     hu = moments_hu(data) # Calcula os movimentos de Hu da imagem
                     
                 self.caracteristicasImagensTeste[self.imagensTreinamento.index(pasta)].append([contraste, homogeneidade, energia, entropia, hu])
-
+            
             # Rearraja os dados obtidos em uma lista, onde cada linha é um array ordenado de todas as características
             listaCaracteristicasTestePasta = list()
             for tupla in self.caracteristicasImagensTeste[self.imagensTreinamento.index(pasta)]:
@@ -267,15 +279,15 @@ class Aplicacao(Frame):
         
             #for img in pasta[round(len(pasta)*0.75):]: # Para as tuplas dentre as 25% últimas da lista, executa
             for i in range(75, 100): # Para as tuplas dentre as 25% últimas da lista, executa
-                listaDiferencialTeste1 = np.subtract(listaCaracteristicasTestePasta[i - 75], media1)
-                listaDiferencialTeste2 = np.subtract(listaCaracteristicasTestePasta[i - 75], media2)
-                listaDiferencialTeste3 = np.subtract(listaCaracteristicasTestePasta[i - 75], media3)
-                listaDiferencialTeste4 = np.subtract(listaCaracteristicasTestePasta[i - 75], media4)
+                listaDiferencialTeste1 = np.subtract(listaCaracteristicasTestePasta[i - 75], self.media1)
+                listaDiferencialTeste2 = np.subtract(listaCaracteristicasTestePasta[i - 75], self.media2)
+                listaDiferencialTeste3 = np.subtract(listaCaracteristicasTestePasta[i - 75], self.media3)
+                listaDiferencialTeste4 = np.subtract(listaCaracteristicasTestePasta[i - 75], self.media4)
 
-                dist1 = np.dot(np.dot(np.array(listaDiferencialTeste1).T, inversoCovariancia1), np.array(listaDiferencialTeste1))
-                dist2 = np.dot(np.dot(np.array(listaDiferencialTeste2).T, inversoCovariancia2), np.array(listaDiferencialTeste2))
-                dist3 = np.dot(np.dot(np.array(listaDiferencialTeste3).T, inversoCovariancia3), np.array(listaDiferencialTeste3))
-                dist4 = np.dot(np.dot(np.array(listaDiferencialTeste4).T, inversoCovariancia4), np.array(listaDiferencialTeste4))
+                dist1 = np.dot(np.dot(np.array(listaDiferencialTeste1).T, self.inversoCovariancia1), np.array(listaDiferencialTeste1))
+                dist2 = np.dot(np.dot(np.array(listaDiferencialTeste2).T, self.inversoCovariancia2), np.array(listaDiferencialTeste2))
+                dist3 = np.dot(np.dot(np.array(listaDiferencialTeste3).T, self.inversoCovariancia3), np.array(listaDiferencialTeste3))
+                dist4 = np.dot(np.dot(np.array(listaDiferencialTeste4).T, self.inversoCovariancia4), np.array(listaDiferencialTeste4))
             
                 menorDistanciaValor = sys.maxsize
                 menorDistanciaId = None
@@ -300,18 +312,7 @@ class Aplicacao(Frame):
 
         fimExecucao = timer()
 
-        self.matrizConfusao = ('''
-{}\t{}\t{}\t{}
-{}\t{}\t{}\t{}
-{}\t{}\t{}\t{}
-{}\t{}\t{}\t{}
-
-Acurácia: {} %
-
-Especificidade: {}
-
-Tempo de Execução: {} s
-'''.format(
+        self.matrizConfusao = ('''\n{}\t{}\t{}\t{}\n{}\t{}\t{}\t{}\n{}\t{}\t{}\t{}\n{}\t{}\t{}\t{}\n\nAcurácia: {} %\n\nEspecificidade: {}\n\nTempo de Execução: {} s\n'''.format(
                 self.exibir2Digitos(matrizConfusao[0][0]), self.exibir2Digitos(matrizConfusao[0][1]), self.exibir2Digitos(matrizConfusao[0][2]), self.exibir2Digitos(matrizConfusao[0][3]),
                 self.exibir2Digitos(matrizConfusao[1][0]), self.exibir2Digitos(matrizConfusao[1][1]), self.exibir2Digitos(matrizConfusao[1][2]), self.exibir2Digitos(matrizConfusao[1][3]),
                 self.exibir2Digitos(matrizConfusao[2][0]), self.exibir2Digitos(matrizConfusao[2][1]), self.exibir2Digitos(matrizConfusao[2][2]), self.exibir2Digitos(matrizConfusao[2][3]),
@@ -329,6 +330,61 @@ Tempo de Execução: {} s
         matrizConfusaoJanela.title("Matriz de Confusão")
         matrizConfusaoJanela.geometry("300x300+408+250")
         Label(matrizConfusaoJanela, text =self.matrizConfusao).pack() 
+
+    def classificarAreaInteresse(self):
+        console.log('\nSelecionada opção de classificação da região de interesse.\n')
+
+    def classificarImagem(self):
+        im = cv2.imread(self.pathImagem, 0) # Instancia o cv2.imread da imagem selecionada
+        data = np.array((im/8), 'int') # Divide os valores de cinza de im em 8 para que existam no máximo 32 tons de cinza
+        g = greycomatrix(data, [1, 2, 4, 8, 16], [0, np.pi/4, np.pi/2, 3*np.pi/4], levels=32, normed=True, symmetric=True) # Calcula a matrix de co-ocorrência do nível de cinza da imagem.
+                
+        # Obtêm-se as características selecionadas pelo usuário
+        if self.opcaoContraste:    
+            contraste = greycoprops(g, 'contrast') # Calcula o contraste da matrix de co-ocorrência de níveis de cinza
+            contraste = [sum(i) for i in contraste]
+        if self.opcaoHomogeneidade:
+            homogeneidade = greycoprops(g, 'homogeneity') # Calcula a homogeneidade da matrix de co-ocorrência de níveis de cinza
+            homogeneidade = [sum(i) for i in homogeneidade]
+        if self.opcaoEnergia:
+            energia = greycoprops(g, 'energy') # Calcula a energia da matrix de co-ocorrência de níveis de cinza
+            energia = [sum(i) for i in energia]
+        if self.opcaoEntropia:
+            entropia = shannon_entropy(data) # Calcula a entropia de Shannon da imagem
+        if self.opcaoHu:
+            hu = moments_hu(data) # Calcula os movimentos de Hu da imagem
+            
+        #self.caracteristicasImagensTeste[self.imagensTreinamento.index(pasta)][0]
+        caracteristicasImagemSelect = np.concatenate((contraste, homogeneidade, energia, entropia, hu), axis=None)
+
+        listaDiferencialTeste1 = np.subtract(caracteristicasImagemSelect, self.media1)
+        listaDiferencialTeste2 = np.subtract(caracteristicasImagemSelect, self.media2)
+        listaDiferencialTeste3 = np.subtract(caracteristicasImagemSelect, self.media3)
+        listaDiferencialTeste4 = np.subtract(caracteristicasImagemSelect, self.media4)
+
+        dist1 = np.dot(np.dot(np.array(listaDiferencialTeste1).T, self.inversoCovariancia1), np.array(listaDiferencialTeste1))
+        dist2 = np.dot(np.dot(np.array(listaDiferencialTeste2).T, self.inversoCovariancia2), np.array(listaDiferencialTeste2))
+        dist3 = np.dot(np.dot(np.array(listaDiferencialTeste3).T, self.inversoCovariancia3), np.array(listaDiferencialTeste3))
+        dist4 = np.dot(np.dot(np.array(listaDiferencialTeste4).T, self.inversoCovariancia4), np.array(listaDiferencialTeste4))
+        
+        menorDistanciaValor = sys.maxsize
+        menorDistanciaId = None
+        if dist1 < menorDistanciaValor :
+            menorDistanciaId = 1
+            menorDistanciaValor = dist1
+        if dist2 < menorDistanciaValor :
+            menorDistanciaId = 2
+            menorDistanciaValor = dist2
+        if dist3 < menorDistanciaValor :
+            menorDistanciaId = 3
+            menorDistanciaValor = dist3
+        if dist4 < menorDistanciaValor :
+            menorDistanciaId = 4
+            menorDistanciaValor = dist4
+
+        print('Id identificado :', menorDistanciaId,'\tCaminho imagem:', self.pathImagem)
+
+
 
     # Contorna e recorta a área de interesse selecionada
     def selecionarAreaInteresse(self, event):
@@ -451,6 +507,8 @@ Tempo de Execução: {} s
         opcoesClassificacao = Menu(menubar, tearoff=0)
         opcoesClassificacao.add_command(label="Importar imagem", command=self.abrirImagem)
         opcoesClassificacao.add_command(label="Selecionar região de interesse", command=self.habilitarSelecaoAreaInteresse)
+        opcoesClassificacao.add_command(label="Classificar região de interesse", command=self.classificarAreaInteresse)
+        opcoesClassificacao.add_command(label="Classificar imagem por inteiro", command=self.classificarImagem)
         menubar.add_cascade(label="Classificação", menu=opcoesClassificacao)
         
         checkCaracteristicas = Menu(menubar, tearoff=0)
