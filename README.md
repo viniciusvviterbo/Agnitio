@@ -7,6 +7,7 @@ Software para manipulação de imagens.
 1. (Opcional) Crie um ambiente virtual:
 ```shell
 virtualenv .venv
+source .venv/bin/activate
 ```
 
 2. Clone esse repositório e execute:
