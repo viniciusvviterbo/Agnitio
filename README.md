@@ -1,46 +1,46 @@
 ![Header](https://user-images.githubusercontent.com/24854541/100174337-fbdfd380-2eaa-11eb-8904-ed9879116bc8.png)
 
-A densidade da mama é comprovadamente relacionada com o risco do desen-volvimento de câncer, uma vez que mulheres com uma maior densidade mamária podem esconder lesões, levando o câncer a ser detectado tardiamente. A escalade densidade chamada BIRADS foi desenvolvida pelo American College of Radiology e informa os radiologistas sobre a diminuição da sensibilidade do exame com o aumento da densidade da mama. BI-RADS definem a densidade como sendo quase inteiramente composta por gordura (densidade I), por tecido fi-brobroglandular difuso (densidade II), por tecido denso heterogêneo (III) e portecido extremamente denso (IV). A mamografia é a principal ferramenta derastreio do câncer e radiologistas avaliam a densidade da mama com base na análise visual das imagens.
+Breast density is proven to be related to the risk of developing cancer, since women with a higher breast density can hide lesions, leading to cancer being detected late. The density scale called BIRADS was developed by the American College of Radiology and informs radiologists about the decrease in the sensitivity of the exam with increasing breast density. BI-RADS define density as being almost entirely composed of fat (density I), diffuse fibrobroglandular tissue (density II), heterogeneous dense tissue (III) and extremely dense (IV). Mammography is the main cancer screening tool and radiologists assess breast density based on visual analysis of the images.
 
-O objetivo desse projeto é desenvolver um programa capaz de classificar a densidade das mamas na escala BIRADS através das imagens fornecidas.
+The objective of this project is to develop a program capable of classifying breast density on the BIRADS scale through the images provided.
 
-# Técnicas Implementadas
+# Implemented Techniques
 
-Para a classificação utilizamos as seguintes características de imagens:
+For the classification the following image characteristics were used:
 
-- Energia
-- Entropia
-- Homogeneidade
-- Contraste
-- Momentos invariantes de Hu
+- Energy
+- Entropy
+- Homogeneity
+- Contrast
+- Hu's invariant moments
 
-Com essa características, utilizamos a distância de Mahalanobis para classificar as imagens na escala BIRADS.
+With these characteristics, we used the Mahalanobis distance to classify the images on the BIRADS scale.
 
-# Instalando as Dependências
+# Installing Dependencies
 
-1. Clone esse repositório:
+1. Clone this repository:
 ```shell
 git clone https://github.com/viniciusvviterbo/Agnitio
 ```
 
-2. (Opcional) Crie um ambiente virtual:
+2. (Optional) Create a virtual environment:
 ```shell
 virtualenv .venv
 source .venv/bin/activate
 ```
 
-3. Instale as dependências:
+3. Install the dependencies:
 ```shell
 pip3 install -r requirements.txt
 ```
 
-# Uso
+# Usage
 
 ```
 python3 agnitio.py
 ```
 
-# Autores
+# Authors
 [Erick Lage](https://github.com/erickLage)
 
 [Vinícius Viterbo](https://github.com/viniciusvviterbo)
