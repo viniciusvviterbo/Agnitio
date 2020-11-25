@@ -1,4 +1,4 @@
-# Agnitio
+![Header](https://user-images.githubusercontent.com/24854541/100174337-fbdfd380-2eaa-11eb-8904-ed9879116bc8.png)
 
 A densidade da mama é comprovadamente relacionada com o risco do desen-volvimento de câncer, uma vez que mulheres com uma maior densidade mamária podem esconder lesões, levando o câncer a ser detectado tardiamente. A escalade densidade chamada BIRADS foi desenvolvida pelo American College of Radiology e informa os radiologistas sobre a diminuição da sensibilidade do exame com o aumento da densidade da mama. BI-RADS definem a densidade como sendo quase inteiramente composta por gordura (densidade I), por tecido fi-brobroglandular difuso (densidade II), por tecido denso heterogêneo (III) e portecido extremamente denso (IV). A mamografia é a principal ferramenta derastreio do câncer e radiologistas avaliam a densidade da mama com base na análise visual das imagens.
 
@@ -45,5 +45,6 @@ python3 agnitio.py
 
 [Vinícius Viterbo](https://github.com/viniciusvviterbo)
 
+![Separador](https://user-images.githubusercontent.com/24854541/100174347-05693b80-2eab-11eb-9fd9-9662153767c0.png)
 
 **[GNU AGPL v3.0](https://www.gnu.org/licenses/gpl-3.0.html)**
