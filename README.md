@@ -4,7 +4,7 @@ A densidade da mama é comprovadamente relacionada com o risco do desen-volvimen
 
 O objetivo desse projeto é desenvolver um programa capaz de classificar a densidade das mamas na escala BIRADS através das imagens fornecidas.
 
-### Técnicas Implementadas
+# Técnicas Implementadas
 
 Para a classificação utilizamos as seguintes características de imagens:
 
@@ -16,7 +16,7 @@ Para a classificação utilizamos as seguintes características de imagens:
 
 Com essa características, utilizamos a distância de Mahalanobis para classificar as imagens na escala BIRADS.
 
-### Instalando as Dependências
+# Instalando as Dependências
 
 1. Clone esse repositório:
 ```shell
@@ -34,13 +34,13 @@ source .venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
-### Uso
+# Uso
 
 ```
 python3 agnitio.py
 ```
 
-### Autores
+# Autores
 [Erick Lage](https://github.com/erickLage)
 
 [Vinícius Viterbo](https://github.com/viniciusvviterbo)
