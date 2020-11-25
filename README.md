@@ -1,5 +1,7 @@
 ![Header](https://user-images.githubusercontent.com/24854541/100174337-fbdfd380-2eaa-11eb-8904-ed9879116bc8.png)
 
+*Leia esse README em [`português`](https://github.com/viniciusvviterbo/Agnitio/blob/main/README.pt.md).*
+
 Breast density is proven to be related to the risk of developing cancer, since women with a higher breast density can hide lesions, leading to cancer being detected late. The density scale called BIRADS was developed by the American College of Radiology and informs radiologists about the decrease in the sensitivity of the exam with increasing breast density. BI-RADS define density as being almost entirely composed of fat (density I), diffuse fibrobroglandular tissue (density II), heterogeneous dense tissue (III) and extremely dense (IV). Mammography is the main cancer screening tool and radiologists assess breast density based on visual analysis of the images.
 
 The objective of this project is to develop a program capable of classifying breast density on the BIRADS scale through the images provided.
