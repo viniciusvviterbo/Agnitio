@@ -69,7 +69,7 @@ class Aplicacao(Frame):
         self.caracteristicasImagensTeste = [list(),list(),list(),list()] # Define uma matriz onde cada linha corresponde às características de um diretório
         
         # Aplica as dimensões e posição da janela
-        self.master.geometry(str(self.janela_largura) + 'x' + str(self.janela_altura) + '+0+0')
+        self.master.geometry(str(int(self.janela_largura/2)) + 'x' + str(int(self.janela_altura/2)) + '+' + str(int(self.janela_largura/4)) + '+' + str(int(self.janela_altura/4)))
         # Implementa o menu e seus componentes na janela
         self.criarMenu()
 
@@ -334,16 +334,14 @@ class Aplicacao(Frame):
     def exibirMatrizConfusao(self):
         matrizConfusaoJanela = Toplevel(self.master) 
         matrizConfusaoJanela.title("Matriz de Confusão")
-        matrizConfusaoJanela.geometry("300x300+408+250")
+        matrizConfusaoJanela.geometry('250x200+' + str(int(self.janela_largura/2) - 130) + '+' + str(int(self.janela_altura/2) - 100))
         Label(matrizConfusaoJanela, text =self.matrizConfusao).pack() 
-
 
     def exibirClassificacaoImagem(self, mensagem):
         matrizClassificacaoJanela = Toplevel(self.master) 
         matrizClassificacaoJanela.title("Classificação da Imagem")
-        matrizClassificacaoJanela.geometry("300x300+408+250")
+        matrizClassificacaoJanela.geometry('250x200+' + str(int(self.janela_largura/2) - 130) + '+' + str(int(self.janela_altura/2) - 100))
         Label(matrizClassificacaoJanela, text = mensagem).pack() 
-
 
     def classificarAreaInteresse(self):
         inicioExecucaoImagemSelecionada = timer()
