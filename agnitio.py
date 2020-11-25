@@ -323,7 +323,7 @@ class Aplicacao(Frame):
                 self.exibir2Digitos(matrizConfusao[1][0]), self.exibir2Digitos(matrizConfusao[1][1]), self.exibir2Digitos(matrizConfusao[1][2]), self.exibir2Digitos(matrizConfusao[1][3]),
                 self.exibir2Digitos(matrizConfusao[2][0]), self.exibir2Digitos(matrizConfusao[2][1]), self.exibir2Digitos(matrizConfusao[2][2]), self.exibir2Digitos(matrizConfusao[2][3]),
                 self.exibir2Digitos(matrizConfusao[3][0]), self.exibir2Digitos(matrizConfusao[3][1]), self.exibir2Digitos(matrizConfusao[3][2]), self.exibir2Digitos(matrizConfusao[3][3]),
-                 "{:.2f}".format(acuracia), "{:.2f}".format((fimExecucaoTreino - inicioExecucaoTreino)/100000), "{:.2f}".format((100 - acuracia)/300))) 
+                 "{:.2f}".format(acuracia), "{:.5f}".format((100 - acuracia)/300), "{:.2f}".format((fimExecucaoTreino - inicioExecucaoTreino)/100000))) 
 
         self.exibirMatrizConfusao()
 
