@@ -1,5 +1,7 @@
 ![Header](https://user-images.githubusercontent.com/24854541/100174337-fbdfd380-2eaa-11eb-8904-ed9879116bc8.png)
 
+*Read this README in [`english`](https://github.com/viniciusvviterbo/Agnitio/blob/main/README.md)*
+
 A densidade da mama é comprovadamente relacionada com o risco do desenvolvimento de câncer, uma vez que mulheres com uma maior densidade mamária podem esconder lesões, levando o câncer a ser detectado tardiamente. A escalade densidade chamada BIRADS foi desenvolvida pelo American College of Radiology e informa os radiologistas sobre a diminuição da sensibilidade do exame com o aumento da densidade da mama. BI-RADS definem a densidade como sendo quase inteiramente composta por gordura (densidade I), por tecido fibrobroglandular difuso (densidade II), por tecido denso heterogêneo (III) e portecido extremamente denso (IV). A mamografia é a principal ferramenta derastreio do câncer e radiologistas avaliam a densidade da mama com base na análise visual das imagens.
 
 O objetivo desse projeto é desenvolver um programa capaz de classificar a densidade das mamas na escala BIRADS através das imagens fornecidas.
