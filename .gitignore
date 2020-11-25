@@ -1,9 +1,8 @@
 # Arquivos específicos da aplicação
-imagens_treinamento/
-imagens_teste/
-enunciado.pdf
+imagens_agnitio/
 area_de_interesse.png
 Trabalho_Pratico_PI.pdf
+enunciado.pdf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
